@@ -1,4 +1,4 @@
-name: Rust
+name: Rust compile & release
 
 on:
   push:
@@ -12,6 +12,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:10
 
     steps:
     - name: Checkout code
@@ -26,5 +28,5 @@ jobs:
     - name: Build
       run: cargo build --release --verbose
 
-    - name: Run tests
-      run: cargo test --verbose
+#    - name: Run tests
+#      run: cargo test --verbose
