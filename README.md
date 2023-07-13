@@ -1,7 +1,14 @@
 # OpenStreetMap PBF history parser
 This Rust program:
 - parses OSM [history files from Geofabrik](https://osm-internal.download.geofabrik.de)
-- 
+- then creates a postgres `osm.history` table with the following fields:
+  - id (negative IDs are for relations)
+  - timestamps
+  - changesets
+  - first_timestamps
+  - last_timestamps
+  - users_number
+  - versions_number
 
 
 ## Configure your rust environment
