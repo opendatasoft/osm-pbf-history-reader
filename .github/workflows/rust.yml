@@ -12,17 +12,19 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: debian:10
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Rust setup
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Rust
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: stable
+
     - name: Build
       run: cargo build --release --verbose
+
     - name: Run tests
       run: cargo test --verbose
