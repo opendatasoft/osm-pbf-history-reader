@@ -10,16 +10,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
-    container:
-      image: debian:10
+#    container:
+#      image: debian:10
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Setup Rust
+      # https://actions-rs.github.io/#toolchain
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
@@ -30,3 +31,11 @@ jobs:
 
 #    - name: Run tests
 #      run: cargo test --verbose
+
+    - name: Create Release
+      # https://github.com/softprops/action-gh-release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: target/release/*
+        tag_name: v1.0.0
+        release_name: Release v1.0.0
