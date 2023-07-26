@@ -32,15 +32,15 @@ pub fn load(
 
     for (key, value) in nodes_info.iter() {
         let mut row: Vec<&(dyn ToSql + Sync)> = Vec::new();
-        let first_timestamp = value.timestamps.iter().min().unwrap();
-        let last_timestamp = value.timestamps.iter().max().unwrap();
+        let first_update = value.timestamps.iter().min().unwrap();
+        let last_update = value.timestamps.iter().max().unwrap();
         let users_number = value.uids.iter().unique().count() as i64;
         let versions_number = value.timestamps.len() as i64;
         row.push(key);
         row.push(&value.timestamps);
         row.push(&value.changesets);
-        row.push(first_timestamp);
-        row.push(last_timestamp);
+        row.push(first_update);
+        row.push(last_update);
         row.push(&users_number);
         row.push(&versions_number);
         writer.write(&row).unwrap();

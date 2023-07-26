@@ -34,4 +34,4 @@ jobs:
       with:
         files: target/x86_64-unknown-linux-musl/release/*
         tag_name: v1.0.0
-        release_name: Release v1.0.0
+        release_name: Release v1.1.0

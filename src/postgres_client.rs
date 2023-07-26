@@ -51,8 +51,8 @@ pub fn create_table_history(client: &mut Client, schema: &str, table: &str) {
             id int8,
             timestamps TIMESTAMP WITH TIME ZONE[],
             changesets int8[],
-            first_timestamps TIMESTAMP WITH TIME ZONE,
-            last_timestamps TIMESTAMP WITH TIME ZONE,
+            first_update TIMESTAMP WITH TIME ZONE,
+            last_update TIMESTAMP WITH TIME ZONE,
             users_number int8,
             versions_number int8)",
         schema, table

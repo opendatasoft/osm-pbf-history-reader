@@ -1,15 +1,14 @@
 use std::collections::HashSet;
 use std::env;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 use std::time::Instant;
 
 mod history_processing;
 mod infos;
 mod load_infos;
 mod postgres_client;
-
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
 
 const SCHEMA: &str = "OSM";
 const TABLE: &str = "HISTORY";
@@ -34,12 +33,22 @@ fn main() {
         }
     }
 
+    // Read tag_list file and store tags into an Hashset (ignore values after the equal signs)
     let file = File::open(tag_list_file_path).expect("Failed to open tag list file.");
     let reader = io::BufReader::new(file);
     let mut tag_list_string: Vec<String> = Vec::new();
     for line in reader.lines() {
-        let line = line.unwrap_or("".parse().unwrap());
-        tag_list_string.push(line);
+        let final_line = match line {
+            Ok(line) => {
+                if let Some(index) = line.find('=') {
+                    line[..index].to_owned()
+                } else {
+                    line.to_owned()
+                }
+            }
+            Err(_) => String::new(),
+        };
+        tag_list_string.push(final_line);
     }
     let tag_list: HashSet<&str> = tag_list_string.iter().map(|s| s.as_str()).collect();
 

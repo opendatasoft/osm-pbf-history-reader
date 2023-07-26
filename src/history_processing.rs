@@ -10,7 +10,7 @@ pub fn process_history(
     tag_list: HashSet<&str>,
 ) -> HashMap<i64, GatheredInfos> {
     let mut elements_info: HashMap<i64, GatheredInfos> = HashMap::new();
-    // 
+
     let reader_result = ElementReader::from_path(history_file_path);
 
     let reader = match reader_result {
