@@ -32,10 +32,18 @@ fn main() {
     let tag_list_file_path = Path::new(tag_list_file_path_str);
 
     // SECURITY if no 4th argument is send (old fr pipeline hardcoded)
-    // If no country_code OR country_code = france --> schema = osm
+    // If no country_code OR country_code = fr --> schema = osm
     // consistency with old version
-    let country_code = args.get(3).cloned().unwrap_or_else(|| String::from("france"));
-    let schema = if country_code == "france" { 
+    let country_code = args.get(3).cloned().unwrap_or_else(|| String::from("fr"));
+
+    if country_code.len() != 2 {
+        panic!(
+            "Invalid country_code '{}': must be exactly 2 letters (e.g., 'fr', 'au', 'nz')",
+            country_code
+        );
+    }
+
+    let schema = if country_code == "fr" { 
         String::from("osm") 
     } else { 
         format!("osm_{}", country_code) 
@@ -47,6 +55,7 @@ fn main() {
         }
     }
 
+    // Read tag_list file and store tags into an Hashset (ignore values after the equal signs)
     let file = File::open(tag_list_file_path).expect("Failed to open tag list file.");
     let reader = io::BufReader::new(file);
     let mut tag_list_string: Vec<String> = Vec::new();
@@ -65,8 +74,8 @@ fn main() {
     }
     let tag_list: HashSet<&str> = tag_list_string.iter().map(|s| s.as_str()).collect();
 
-    println!("Tags à filtrer : {:?}", tag_list);
-    println!("Traitement pour le pays : {} (Schéma SQL : {})", country_code, schema);
+    println!("Tags to filter: {:?}", tag_list);
+    println!("Processing for country: {} (SQL schema: {})", country_code, schema);
 
     let now = Instant::now();
     let mut db_client = postgres_client::connect(&host, &user, &password, &dbname, &port);
