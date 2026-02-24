@@ -13,6 +13,11 @@ mod postgres_client;
 const TABLE: &str = "HISTORY";
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "--version" {
+        println!("pbf_history_reader version: {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
     let host: String = env::var("DB_HOST").expect("$DB_HOST is not set");
     let password: String = env::var("DB_PASSWORD").expect("$DB_PASSWORD is not set");
     let user: String = env::var("DB_USER").unwrap_or(String::from("dataseed"));
@@ -22,7 +27,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     
     if args.len() < 3 {
-        panic!("Usage: {} <history_pbf> <tag_list> [country_code]", args[0]);
+        panic!("Usage: {} <history_pbf> <tag_list> [country_code] (or --version)", args[0]);
     }
 
     let history_file_path_str = &args[1];

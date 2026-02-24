@@ -11,7 +11,7 @@ This Rust program:
   - users_number
   - versions_number
 
-The schema is dynamically computed based on the country code (see Usage section below).
+The database schema is dynamically computed based on the country code (see Usage section below).
 
 ---
 
@@ -31,7 +31,12 @@ Writes to schema `osm_nz`.
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt au
 ```
-Writes to schema `osm_aus`.
+Writes to schema `osm_au`.
+
+### To know the version
+```bash
+./pbf_history_reader --version
+```
 
 ---
 
@@ -124,7 +129,7 @@ in `docker-compose.yml` file)
 
 ### How to release a new version
 
-1. **Update the version tag in `.github/workflows/rust.yml`**
+1. **Update the version tag in `.github/workflows/rust.yml` and in `Cargo.toml`**
    
    Edit the `tag_name` and `release_name` fields:
 ```yaml
@@ -134,6 +139,11 @@ in `docker-compose.yml` file)
        files: target/x86_64-unknown-linux-musl/release/*
        tag_name: v1.2.0        # ← update this
        release_name: Release v1.2.0  # ← and this
+```
+
+   Edit the `version` fields:
+```
+   version = "1.2.0". # <- update this
 ```
 
 2. **Commit and push to master**
