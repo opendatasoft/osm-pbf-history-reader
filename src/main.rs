@@ -10,10 +10,14 @@ mod infos;
 mod load_infos;
 mod postgres_client;
 
-const SCHEMA: &str = "OSM";
 const TABLE: &str = "HISTORY";
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "--version" {
+        println!("pbf_history_reader version: {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
     let host: String = env::var("DB_HOST").expect("$DB_HOST is not set");
     let password: String = env::var("DB_PASSWORD").expect("$DB_PASSWORD is not set");
     let user: String = env::var("DB_USER").unwrap_or(String::from("dataseed"));
@@ -21,15 +25,38 @@ fn main() {
     let port: String = env::var("DB_PORT").unwrap_or(String::from("5432"));
 
     let args: Vec<String> = env::args().collect();
+    
+    if args.len() < 3 {
+        panic!("Usage: {} <history_pbf> <tag_list> [country_code] (or --version)", args[0]);
+    }
+
     let history_file_path_str = &args[1];
     let history_file_path = Path::new(history_file_path_str);
 
     let tag_list_file_path_str = &args[2];
     let tag_list_file_path = Path::new(tag_list_file_path_str);
 
+    // SECURITY if no 4th argument is send (old fr pipeline hardcoded)
+    // If no country_code OR country_code = fr --> schema = osm
+    // consistency with old version
+    let country_code = args.get(3).cloned().unwrap_or_else(|| String::from("fr"));
+
+    if country_code.len() != 2 {
+        panic!(
+            "Invalid country_code '{}': must be exactly 2 letters (e.g., 'fr', 'au', 'nz')",
+            country_code
+        );
+    }
+
+    let schema = if country_code == "fr" { 
+        String::from("osm") 
+    } else { 
+        format!("osm_{}", country_code) 
+    };
+
     for path in [history_file_path, tag_list_file_path] {
         if !path.exists() {
-            panic!("Tag list file {} does not exists", path.display())
+            panic!("File {} does not exist", path.display())
         }
     }
 
@@ -52,26 +79,27 @@ fn main() {
     }
     let tag_list: HashSet<&str> = tag_list_string.iter().map(|s| s.as_str()).collect();
 
-    println!("{:?}", tag_list);
+    println!("Tags to filter: {:?}", tag_list);
+    println!("Processing for country: {} (SQL schema: {})", country_code, schema);
 
     let now = Instant::now();
     let mut db_client = postgres_client::connect(&host, &user, &password, &dbname, &port);
     let db_connection_time = Instant::now();
 
-    postgres_client::create_schema(&mut db_client, SCHEMA);
+    postgres_client::create_schema(&mut db_client, &schema);
     let db_schema_creation_time = Instant::now();
 
-    postgres_client::create_table_history(&mut db_client, SCHEMA, TABLE);
+    postgres_client::create_table_history(&mut db_client, &schema, TABLE);
     let db_history_creation_time = Instant::now();
 
     let elements_infos =
         history_processing::process_history(history_file_path.to_str().unwrap(), tag_list);
     let process_history_time = Instant::now();
 
-    postgres_client::add_index(&mut db_client, SCHEMA, TABLE, "id");
+    postgres_client::add_index(&mut db_client, &schema, TABLE, "id");
     let indexing_time = Instant::now();
 
-    load_infos::load(&mut db_client, SCHEMA, TABLE, elements_infos);
+    load_infos::load(&mut db_client, &schema, TABLE, elements_infos);
     let insert_history_time = Instant::now();
 
     println!(
