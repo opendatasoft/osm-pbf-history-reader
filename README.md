@@ -39,7 +39,6 @@ Writes to schema `huwise_osm_au`.
 ```
 
 ---
-
 ## Configure your rust environment
 
 ### Tools
