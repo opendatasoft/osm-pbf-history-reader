@@ -48,11 +48,7 @@ fn main() {
         );
     }
 
-    let schema = if country_code == "fr" { 
-        String::from("osm") 
-    } else { 
-        format!("osm_{}", country_code) 
-    };
+    let schema = format!("huwise_osm_{}", country_code);
 
     for path in [history_file_path, tag_list_file_path] {
         if !path.exists() {

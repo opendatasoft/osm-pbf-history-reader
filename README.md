@@ -21,17 +21,17 @@ The database schema is dynamically computed based on the country code (see Usage
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt
 ```
-Writes to schema `osm`.
+Writes to schema `huwise_osm_fr`.
 
 ### With country code (multi-country support)
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt nz
 ```
-Writes to schema `osm_nz`.
+Writes to schema `huwise_osm_nz`.
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt au
 ```
-Writes to schema `osm_au`.
+Writes to schema `huwise_osm_au`.
 
 ### To know the version
 ```bash
@@ -84,15 +84,14 @@ faster.
 
 On mac:
 ```
-brew tap SergioBenitez/osxct
-brew install x86_64-unknown-linux-gnu
+brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu
 ```
 
 then specify it in cargo config file `.cargo/config.toml`:
 ```bash
 # .cargo/config.toml
 [target.x86_64-unknown-linux-gnu]
-linker = "/opt/homebrew/bin/x86_64-unknown-linux-gnu-gcc"
+linker = "/usr/local/bin/x86_64-unknown-linux-gnu-gcc"
 ```
 
 - Specify the compilation target:
@@ -114,9 +113,9 @@ The executable file is created in `osm/pbf_history_reader/target/x86_64-unknown-
 pbf_history_reader needs several environment variables to work:
 - `DB_HOST` (required)
 - `DB_PASSWORD` (required)
-- `DB_NAME` (default: `dataseed`)
+- `DB_NAME`
 - `DB_PORT` (default: `5432`)
-- `DB_USER` (default: `dataseed`)
+- `DB_USER`
 - `OSM_ACCOUNT_USER` (for history files)
 - `OSM_ACCOUNT_PASSWORD` (for history files)
 
@@ -146,11 +145,11 @@ in `docker-compose.yml` file)
    version = "1.2.0". # <- update this
 ```
 
-2. **Commit and push to master**
+2. **Commit and push to a branch for PRr**
 ```bash
    git add .github/workflows/rust.yml
    git commit -m "chore: bump version to v1.2.0"
-   git push origin master
+   git push origin my_branch
 ```
 
 3. **GitHub Actions will automatically:**
