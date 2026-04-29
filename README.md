@@ -2,7 +2,7 @@
 
 This Rust program:
 - parses OSM [history files from Geofabrik](https://osm-internal.download.geofabrik.de)
-- then creates a postgres `{schema}.history` table with the following fields:
+- then creates a postgres `{schema}.{country_code}_history` table with the following fields:
   - id (negative IDs are for relations)
   - timestamps
   - changesets
@@ -11,7 +11,7 @@ This Rust program:
   - users_number
   - versions_number
 
-The database schema is dynamically computed based on the country code (see Usage section below).
+All countries share a single schema `huwise_osm`, with tables prefixed by country code (e.g. `fr_history`, `au_history`).
 
 ---
 
@@ -21,17 +21,22 @@ The database schema is dynamically computed based on the country code (see Usage
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt
 ```
-Writes to schema `huwise_osm_fr`.
+Writes to schema `huwise_osm`, table `fr_history`.
 
 ### With country code (multi-country support)
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt nz
 ```
-Writes to schema `huwise_osm_nz`.
+Writes to schema `huwise_osm`, table `nz_history`.
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt au
 ```
-Writes to schema `huwise_osm_au`.
+Writes to schema `huwise_osm`, table `au_history`.
+
+### With explicit schema (optional)
+```bash
+./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt fr huwise_osm
+```
 
 ### To know the version
 ```bash
@@ -39,6 +44,7 @@ Writes to schema `huwise_osm_au`.
 ```
 
 ---
+
 ## Configure your rust environment
 
 ### Tools
@@ -144,7 +150,7 @@ in `docker-compose.yml` file)
    version = "1.2.0". # <- update this
 ```
 
-2. **Commit and push to a branch for PRr**
+2. **Commit and push to a branch for PR**
 ```bash
    git add .github/workflows/rust.yml
    git commit -m "chore: bump version to v1.2.0"

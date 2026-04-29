@@ -36,9 +36,7 @@ fn main() {
     let tag_list_file_path_str = &args[2];
     let tag_list_file_path = Path::new(tag_list_file_path_str);
 
-    // SECURITY if no 4th argument is send (old fr pipeline hardcoded)
-    // If no country_code OR country_code = fr --> schema = osm
-    // consistency with old version
+    // If no country_code is provided, defaults to "fr"
     let country_code = args.get(3).cloned().unwrap_or_else(|| String::from("fr"));
 
     if country_code.len() != 2 {
@@ -50,8 +48,8 @@ fn main() {
 
     let schema = args.get(4)
         .cloned()
-        .unwrap_or_else(|| format!("huwise_osm_{}", country_code));
-        
+        .unwrap_or_else(|| String::from("huwise_osm"));
+
     for path in [history_file_path, tag_list_file_path] {
         if !path.exists() {
             panic!("File {} does not exist", path.display())
