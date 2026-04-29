@@ -48,8 +48,10 @@ fn main() {
         );
     }
 
-    let schema = format!("huwise_osm_{}", country_code);
-
+    let schema = args.get(4)
+        .cloned()
+        .unwrap_or_else(|| format!("huwise_osm_{}", country_code));
+        
     for path in [history_file_path, tag_list_file_path] {
         if !path.exists() {
             panic!("File {} does not exist", path.display())
