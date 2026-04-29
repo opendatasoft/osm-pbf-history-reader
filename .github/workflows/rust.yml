@@ -16,12 +16,11 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        profile: minimal
         toolchain: stable
         target: x86_64-unknown-linux-musl
 
@@ -29,7 +28,7 @@ jobs:
       run: cargo build --target x86_64-unknown-linux-musl --release --verbose
 
     - name: Upload x86_64 artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: x86_64-artifacts
         path: target/x86_64-unknown-linux-musl/release/*
@@ -39,12 +38,11 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        profile: minimal
         toolchain: stable
         target: aarch64-unknown-linux-musl
 
@@ -55,34 +53,72 @@ jobs:
       run: cross build --target aarch64-unknown-linux-musl --release --verbose
 
     - name: Upload arm64 artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: arm64-artifacts
         path: target/aarch64-unknown-linux-musl/release/*
 
+
+  build-macos-arm64:
+      runs-on: macos-latest
+
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: aarch64-apple-darwin
+
+      - name: Build macOS arm64
+        run: cargo build --target aarch64-apple-darwin --release --verbose
+
+      - name: Upload macOS arm64 artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64-artifacts
+          path: target/aarch64-apple-darwin/release/*
+
+
   release:
-    needs: [build-x86_64, build-arm64]
+    needs: [build-x86_64, build-arm64, build-macos-arm64]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
     - name: Download x86_64 artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: x86_64-artifacts
         path: release-x86_64
 
     - name: Download arm64 artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: arm64-artifacts
         path: release-arm64
 
+    - name: Download macos-arm64 artifacts
+      uses: actions/download-artifact@v7
+      with:
+        name: macos-arm64-artifacts
+        path: release-macos-arm64
+
+    - name: Prepare release artifacts
+      run: |
+        cp release-x86_64/pbf_history_reader pbf_history_reader-x86_64
+        cp release-arm64/pbf_history_reader pbf_history_reader-arm64
+        cp release-macos-arm64/pbf_history_reader pbf_history_reader-macos-arm64
+        chmod 755 pbf_history_reader-*
+
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v3
       with:
         files: |
-          release-x86_64/*
-          release-arm64/*
+          pbf_history_reader-x86_64
+          pbf_history_reader-arm64
+          pbf_history_reader-macos-arm64
         tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
