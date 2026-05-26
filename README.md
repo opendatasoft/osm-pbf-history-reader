@@ -83,33 +83,42 @@ faster.
 
 ---
 
-## Cross-compilation
-
-- Install a cross toolchain:
-
-On mac:
-```
-brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu
-```
-
-then specify it in cargo config file `.cargo/config.toml`:
+## Cross-compilation (recommended method)
+ 
+The modern and most robust approach on macOS is to use [Zig](https://ziglang.org/) as a linker via `cargo-zigbuild`. Zig natively supports all cross-compilation targets (glibc and musl) without requiring large GCC toolchains or dealing with dependency issues.
+ 
+### Install tools
+ 
 ```bash
-# .cargo/config.toml
-[target.x86_64-unknown-linux-gnu]
-linker = "/usr/local/bin/x86_64-unknown-linux-gnu-gcc"
+brew install zig
+cargo install cargo-zigbuild@0.21.8
 ```
-
-- Specify the compilation target:
+ 
+### Add the target
+ 
+For **arm64** (Mac M1/M2, arm64 Linux containers):
+```bash
+rustup target add aarch64-unknown-linux-musl
 ```
+ 
+For **x86_64** (Intel Linux containers):
+```bash
 rustup target add x86_64-unknown-linux-gnu
 ```
-
-- Compile (in release):
+ 
+### Compile (in release)
+ 
+For **arm64**:
+```bash
+cargo zigbuild --target aarch64-unknown-linux-musl --release
 ```
-cargo build --target x86_64-unknown-linux-gnu -v --release
+The executable is created in `target/aarch64-unknown-linux-musl/release/` directory.
+ 
+For **x86_64**:
+```bash
+cargo zigbuild --target x86_64-unknown-linux-gnu --release
 ```
-
-The executable file is created in `osm/pbf_history_reader/target/x86_64-unknown-linux-gnu/release` directory
+The executable is created in `target/x86_64-unknown-linux-gnu/release/` directory.
 
 ---
 
