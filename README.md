@@ -83,42 +83,62 @@ faster.
 
 ---
 
-## Cross-compilation (recommended method)
- 
-The modern and most robust approach on macOS is to use [Zig](https://ziglang.org/) as a linker via `cargo-zigbuild`. Zig natively supports all cross-compilation targets (glibc and musl) without requiring large GCC toolchains or dealing with dependency issues.
- 
-### Install tools
- 
+## Cross-compilation
+
+### Method 1 (recommended): GCC toolchain
+
+- Install a cross toolchain:
+
+On mac:
+```bash
+brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu  # for x86_64
+brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu  # for arm64
+```
+
+Then specify it in cargo config file `.cargo/config.toml`:
+```toml
+# .cargo/config.toml
+[target.x86_64-unknown-linux-gnu]
+linker = "/usr/local/bin/x86_64-unknown-linux-gnu-gcc"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "/usr/local/bin/aarch64-unknown-linux-gnu-gcc"
+```
+
+- Specify the compilation target:
+```bash
+rustup target add x86_64-unknown-linux-gnu   # for x86_64
+rustup target add aarch64-unknown-linux-gnu  # for arm64
+```
+
+- Compile (in release):
+```bash
+cargo build --target x86_64-unknown-linux-gnu --release   # for x86_64
+cargo build --target aarch64-unknown-linux-gnu --release  # for arm64
+```
+
+---
+
+### Method 2 (fallback): cargo-zigbuild
+
+If the GCC toolchain installation fails (e.g. Python dependency issues), use [Zig](https://ziglang.org/) as a linker via `cargo-zigbuild`. Zig natively supports all cross-compilation targets without requiring large GCC toolchains.
+
 ```bash
 brew install zig
 cargo install cargo-zigbuild@0.21.8
 ```
- 
-### Add the target
- 
-For **arm64** (Mac M1/M2, arm64 Linux containers):
+
+- Specify the compilation target:
 ```bash
-rustup target add aarch64-unknown-linux-musl
+rustup target add aarch64-unknown-linux-musl  # for arm64
+rustup target add x86_64-unknown-linux-musl  # for x86_64
 ```
- 
-For **x86_64** (Intel Linux containers):
+
+- Compile (in release):
 ```bash
-rustup target add x86_64-unknown-linux-gnu
+cargo zigbuild --target aarch64-unknown-linux-musl --release  # for arm64
+cargo zigbuild --target x86_64-unknown-linux-musl --release  # for x86_64
 ```
- 
-### Compile (in release)
- 
-For **arm64**:
-```bash
-cargo zigbuild --target aarch64-unknown-linux-musl --release
-```
-The executable is created in `target/aarch64-unknown-linux-musl/release/` directory.
- 
-For **x86_64**:
-```bash
-cargo zigbuild --target x86_64-unknown-linux-gnu --release
-```
-The executable is created in `target/x86_64-unknown-linux-gnu/release/` directory.
 
 ---
 
