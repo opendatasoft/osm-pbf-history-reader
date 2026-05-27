@@ -2,7 +2,7 @@
 
 This Rust program:
 - parses OSM [history files from Geofabrik](https://osm-internal.download.geofabrik.de)
-- then creates a postgres `{schema}.history` table with the following fields:
+- then creates a postgres `{schema}.{country_code}_history` table with the following fields:
   - id (negative IDs are for relations)
   - timestamps
   - changesets
@@ -11,7 +11,7 @@ This Rust program:
   - users_number
   - versions_number
 
-The database schema is dynamically computed based on the country code (see Usage section below).
+All countries share a single schema `huwise_osm`, with tables prefixed by country code (e.g. `fr_history`, `au_history`).
 
 ---
 
@@ -21,17 +21,22 @@ The database schema is dynamically computed based on the country code (see Usage
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt
 ```
-Writes to schema `osm`.
+Writes to schema `huwise_osm`, table `fr_history`.
 
 ### With country code (multi-country support)
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt nz
 ```
-Writes to schema `osm_nz`.
+Writes to schema `huwise_osm`, table `nz_history`.
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt au
 ```
-Writes to schema `osm_au`.
+Writes to schema `huwise_osm`, table `au_history`.
+
+### With explicit schema (optional)
+```bash
+./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt fr huwise_osm
+```
 
 ### To know the version
 ```bash
@@ -80,32 +85,60 @@ faster.
 
 ## Cross-compilation
 
+### Method 1 (recommended): GCC toolchain
+
 - Install a cross toolchain:
 
 On mac:
-```
-brew tap SergioBenitez/osxct
-brew install x86_64-unknown-linux-gnu
+```bash
+brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu  # for x86_64
+brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu  # for arm64
 ```
 
-then specify it in cargo config file `.cargo/config.toml`:
-```bash
+Then specify it in cargo config file `.cargo/config.toml`:
+```toml
 # .cargo/config.toml
 [target.x86_64-unknown-linux-gnu]
-linker = "/opt/homebrew/bin/x86_64-unknown-linux-gnu-gcc"
+linker = "/usr/local/bin/x86_64-unknown-linux-gnu-gcc"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "/usr/local/bin/aarch64-unknown-linux-gnu-gcc"
 ```
 
 - Specify the compilation target:
-```
-rustup target add x86_64-unknown-linux-gnu
+```bash
+rustup target add x86_64-unknown-linux-gnu   # for x86_64
+rustup target add aarch64-unknown-linux-gnu  # for arm64
 ```
 
 - Compile (in release):
-```
-cargo build --target x86_64-unknown-linux-gnu -v --release
+```bash
+cargo build --target x86_64-unknown-linux-gnu --release   # for x86_64
+cargo build --target aarch64-unknown-linux-gnu --release  # for arm64
 ```
 
-The executable file is created in `osm/pbf_history_reader/target/x86_64-unknown-linux-gnu/release` directory
+---
+
+### Method 2 (fallback): cargo-zigbuild
+
+If the GCC toolchain installation fails (e.g. Python dependency issues), use [Zig](https://ziglang.org/) as a linker via `cargo-zigbuild`. Zig natively supports all cross-compilation targets without requiring large GCC toolchains.
+
+```bash
+brew install zig
+cargo install cargo-zigbuild@0.21.8
+```
+
+- Specify the compilation target:
+```bash
+rustup target add aarch64-unknown-linux-musl  # for arm64
+rustup target add x86_64-unknown-linux-musl  # for x86_64
+```
+
+- Compile (in release):
+```bash
+cargo zigbuild --target aarch64-unknown-linux-musl --release  # for arm64
+cargo zigbuild --target x86_64-unknown-linux-musl --release  # for x86_64
+```
 
 ---
 
@@ -114,9 +147,9 @@ The executable file is created in `osm/pbf_history_reader/target/x86_64-unknown-
 pbf_history_reader needs several environment variables to work:
 - `DB_HOST` (required)
 - `DB_PASSWORD` (required)
-- `DB_NAME` (default: `dataseed`)
+- `DB_NAME`
 - `DB_PORT` (default: `5432`)
-- `DB_USER` (default: `dataseed`)
+- `DB_USER`
 - `OSM_ACCOUNT_USER` (for history files)
 - `OSM_ACCOUNT_PASSWORD` (for history files)
 
@@ -146,11 +179,11 @@ in `docker-compose.yml` file)
    version = "1.2.0". # <- update this
 ```
 
-2. **Commit and push to master**
+2. **Commit and push to a branch for PR**
 ```bash
    git add .github/workflows/rust.yml
    git commit -m "chore: bump version to v1.2.0"
-   git push origin master
+   git push origin my_branch
 ```
 
 3. **GitHub Actions will automatically:**
