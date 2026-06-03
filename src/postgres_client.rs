@@ -1,19 +1,43 @@
-use postgres::{Client, NoTls};
+use postgres::Client;
+use postgres_rustls::MakeTlsConnector;
+use rustls::{ClientConfig, RootCertStore};
+use rustls::pki_types::TrustAnchor;
+use std::sync::Arc;
 
 pub fn connect(host: &str, user: &str, password: &str, dbname: &str, port: &str) -> Client {
+    let mut root_store = RootCertStore::empty();
+    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| TrustAnchor {
+        subject: ta.subject.clone(),
+        subject_public_key_info: ta.subject_public_key_info.clone(),
+        name_constraints: ta.name_constraints.clone(),
+    }));
+
+    let config = ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+
+    let tls = MakeTlsConnector::new(
+        tokio_rustls::TlsConnector::from(Arc::new(config))
+    );
+
     match Client::connect(
         &format!(
             "host={} user={} password={} dbname={} port={}",
             host, user, password, dbname, port
         ),
-        NoTls,
+        tls,
     ) {
         Ok(client) => {
             println!("Client connected to database");
             client
         }
-        Err(e) => panic!("{}",format!("Client failed to connect to the database with config: host={} user={} dbname={} port={} : {}",
-            host, user, dbname, port, e))
+        Err(e) => panic!(
+            "{}",
+            format!(
+                "Client failed to connect to the database with config: host={} user={} dbname={} port={} : {}",
+                host, user, dbname, port, e
+            )
+        ),
     }
 }
 
