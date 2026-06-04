@@ -10,7 +10,8 @@ mod infos;
 mod load_infos;
 mod postgres_client;
 
-const TABLE: &str = "HISTORY";
+// can be used as a tablename with this countrycode_<suffix>.
+const TABLE_SUFFIX: &str = "history";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -25,9 +26,9 @@ fn main() {
     let port: String = env::var("DB_PORT").unwrap_or(String::from("5432"));
 
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() < 3 {
-        panic!("Usage: {} <history_pbf> <tag_list> [country_code] (or --version)", args[0]);
+        panic!("Usage: {} <history_pbf> <tag_list> [country_code] [schema] (or --version)", args[0]);
     }
 
     let history_file_path_str = &args[1];
@@ -55,6 +56,9 @@ fn main() {
             panic!("File {} does not exist", path.display())
         }
     }
+
+    // The table name, e.g. "fr_history" for country code "fr"
+    let tablename = format!("{country_code}_{TABLE_SUFFIX}");
 
     // Read tag_list file and store tags into an Hashset (ignore values after the equal signs)
     let file = File::open(tag_list_file_path).expect("Failed to open tag list file.");
@@ -85,17 +89,17 @@ fn main() {
     postgres_client::create_schema(&mut db_client, &schema);
     let db_schema_creation_time = Instant::now();
 
-    postgres_client::create_table_history(&mut db_client, &schema, TABLE);
+    postgres_client::create_table_history(&mut db_client, &schema, &tablename);
     let db_history_creation_time = Instant::now();
 
     let elements_infos =
         history_processing::process_history(history_file_path.to_str().unwrap(), tag_list);
     let process_history_time = Instant::now();
 
-    postgres_client::add_index(&mut db_client, &schema, TABLE, "id");
+    postgres_client::add_index(&mut db_client, &schema, &tablename, "id");
     let indexing_time = Instant::now();
 
-    load_infos::load(&mut db_client, &schema, TABLE, elements_infos);
+    load_infos::load(&mut db_client, &schema, &tablename, elements_infos);
     let insert_history_time = Instant::now();
 
     println!(

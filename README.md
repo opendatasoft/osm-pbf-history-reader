@@ -17,6 +17,14 @@ All countries share a single schema `huwise_osm`, with tables prefixed by countr
 
 ## Usage
 
+```bash
+./pbf_history_read HISTORY_OSH_PBF_FILE TAG_LIST_FILE [COUNTRYCODE] [SCHEMA]
+# to get the version number
+./pbf_history_read --version
+```
+
+The `COUNTRYCODE` must be only two letters, such as an iso-code. For instance `en`, `fr`, `jp`, ...
+
 ### Basic usage (France, default)
 ```bash
 ./pbf_history_reader /path/to/history.osh.pbf /path/to/tag_list.txt
@@ -163,7 +171,7 @@ in `docker-compose.yml` file)
 ### How to release a new version
 
 1. **Update the version tag in `.github/workflows/rust.yml` and in `Cargo.toml`**
-   
+
    Edit the `tag_name` and `release_name` fields:
 ```yaml
    - name: Create Release
