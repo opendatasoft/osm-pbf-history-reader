@@ -58,7 +58,7 @@ fn main() {
     }
 
     // The table name, e.g. "fr_history" for country code "fr"
-    let tablename = format!("{country_code}_{TABLE_SUFFIX}");
+    let tablename = format!("{}_{}", country_code.to_ascii_lowercase(), TABLE_SUFFIX);
 
     // Read tag_list file and store tags into an Hashset (ignore values after the equal signs)
     let file = File::open(tag_list_file_path).expect("Failed to open tag list file.");
