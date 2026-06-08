@@ -1,10 +1,16 @@
 use postgres::Client;
 use postgres_rustls::MakeTlsConnector;
-use rustls::{ClientConfig, RootCertStore};
 use rustls::pki_types::TrustAnchor;
-use std::sync::Arc;
+use rustls::{ClientConfig, RootCertStore};
+use std::sync::{Arc, Once};
+
+static INIT_RUSTLS: Once = Once::new();
 
 pub fn connect(host: &str, user: &str, password: &str, dbname: &str, port: &str) -> Client {
+    INIT_RUSTLS.call_once(|| {
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+    });
+
     let mut root_store = RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| TrustAnchor {
         subject: ta.subject.clone(),
