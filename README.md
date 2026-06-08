@@ -18,9 +18,9 @@ All countries share a single schema `huwise_osm`, with tables prefixed by countr
 ## Usage
 
 ```bash
-./pbf_history_read HISTORY_OSH_PBF_FILE TAG_LIST_FILE [COUNTRYCODE] [SCHEMA]
+./pbf_history_reader HISTORY_OSH_PBF_FILE TAG_LIST_FILE [COUNTRYCODE] [SCHEMA]
 # to get the version number
-./pbf_history_read --version
+./pbf_history_reader --version
 ```
 
 The `COUNTRYCODE` must be only two letters, such as an iso-code. For instance `en`, `fr`, `jp`, ...

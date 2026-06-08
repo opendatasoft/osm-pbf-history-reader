@@ -10,7 +10,7 @@ mod infos;
 mod load_infos;
 mod postgres_client;
 
-// can be used as a tablename with this countrycode_<suffix>.
+// Used to build a table name in the format: <country_code>_<suffix>.
 const TABLE_SUFFIX: &str = "history";
 
 fn main() {
