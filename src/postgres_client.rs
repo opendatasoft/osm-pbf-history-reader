@@ -1,30 +1,14 @@
+use native_tls::TlsConnector;
 use postgres::Client;
-use postgres_rustls::MakeTlsConnector;
-use rustls::pki_types::TrustAnchor;
-use rustls::{ClientConfig, RootCertStore};
-use std::sync::{Arc, Once};
-
-static INIT_RUSTLS: Once = Once::new();
+use postgres_native_tls::MakeTlsConnector;
 
 pub fn connect(host: &str, user: &str, password: &str, dbname: &str, port: &str) -> Client {
-    INIT_RUSTLS.call_once(|| {
-        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
-    });
+    let connector = TlsConnector::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .expect("Failed to build TLS connector");
 
-    let mut root_store = RootCertStore::empty();
-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| TrustAnchor {
-        subject: ta.subject.clone(),
-        subject_public_key_info: ta.subject_public_key_info.clone(),
-        name_constraints: ta.name_constraints.clone(),
-    }));
-
-    let config = ClientConfig::builder()
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
-    let tls = MakeTlsConnector::new(
-        tokio_rustls::TlsConnector::from(Arc::new(config))
-    );
+    let tls = MakeTlsConnector::new(connector);
 
     match Client::connect(
         &format!(
@@ -38,11 +22,8 @@ pub fn connect(host: &str, user: &str, password: &str, dbname: &str, port: &str)
             client
         }
         Err(e) => panic!(
-            "{}",
-            format!(
-                "Client failed to connect to the database with config: host={} user={} dbname={} port={} : {}",
-                host, user, dbname, port, e
-            )
+            "Client failed to connect to the database with config: host={} user={} dbname={} port={} : {}",
+            host, user, dbname, port, e
         ),
     }
 }

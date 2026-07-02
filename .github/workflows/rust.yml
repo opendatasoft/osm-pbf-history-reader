@@ -13,8 +13,12 @@ env:
 jobs:
   build-x86_64:
     runs-on: ubuntu-latest
+    container: debian:bookworm
 
     steps:
+    - name: Install build dependencies
+      run: apt-get update && apt-get install -y curl gcc libssl-dev pkg-config git ca-certificates
+
     - name: Checkout code
       uses: actions/checkout@v6
 
@@ -22,22 +26,45 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: 1.93.1
-        target: x86_64-unknown-linux-musl
-
-    - name: Install musl tools
-      run: sudo apt-get install -y musl-tools
 
     - name: Build x86_64
-      run: cargo build --target x86_64-unknown-linux-musl --release --verbose
+      run: cargo build --release --verbose
 
     - name: Upload x86_64 artifact
       uses: actions/upload-artifact@v7
       with:
         name: x86_64-artifacts
-        path: target/x86_64-unknown-linux-musl/release/*
+        path: target/release/pbf_history_reader
+
 
   build-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
+    container: debian:bookworm
+
+    steps:
+    - name: Install build dependencies
+      run: apt-get update && apt-get install -y curl gcc libssl-dev pkg-config git ca-certificates
+
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.93.1
+
+    - name: Build arm64
+      run: cargo build --release --verbose
+
+    - name: Upload arm64 artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: arm64-artifacts
+        path: target/release/pbf_history_reader
+
+
+  build-macos-arm64:
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
@@ -47,42 +74,16 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        target: aarch64-unknown-linux-musl
+        target: aarch64-apple-darwin
 
-    - name: Install cross
-      run: cargo install cross
+    - name: Build macOS arm64
+      run: cargo build --target aarch64-apple-darwin --release --verbose
 
-    - name: Build arm64
-      run: cross build --target aarch64-unknown-linux-musl --release --verbose
-
-    - name: Upload arm64 artifact
+    - name: Upload macOS arm64 artifact
       uses: actions/upload-artifact@v7
       with:
-        name: arm64-artifacts
-        path: target/aarch64-unknown-linux-musl/release/*
-
-
-  build-macos-arm64:
-      runs-on: macos-latest
-
-      steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          target: aarch64-apple-darwin
-
-      - name: Build macOS arm64
-        run: cargo build --target aarch64-apple-darwin --release --verbose
-
-      - name: Upload macOS arm64 artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: macos-arm64-artifacts
-          path: target/aarch64-apple-darwin/release/*
+        name: macos-arm64-artifacts
+        path: target/aarch64-apple-darwin/release/pbf_history_reader
 
 
   release:
